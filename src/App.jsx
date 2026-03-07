@@ -1,255 +1,204 @@
 import { motion } from "framer-motion";
-import { FaGithub, FaLinkedin, FaExternalLinkAlt } from "react-icons/fa";
-import Particles from "@tsparticles/react";
-import { loadSlim } from "@tsparticles/slim";
-import { useCallback, useState } from "react";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
+import { useState } from "react";
 import { Typewriter } from "react-simple-typewriter";
 import avatar from "./assets/avatar.png";
 
 export default function App() {
-  const particlesInit = useCallback(async (engine) => {
-    await loadSlim(engine);
-  }, []);
+  const [genreInput, setGenreInput] = useState("");
+  const [recommendation, setRecommendation] = useState([]);
 
-  const [emailText, setEmailText] = useState("");
-  const [prediction, setPrediction] = useState("...");
-
-  // Simple in-browser spam detection
-  const predictEmail = () => {
-    const spamWords = ["free", "win", "prize", "buy now", "click"];
-    const isSpam = spamWords.some((word) =>
-      emailText.toLowerCase().includes(word)
-    );
-    setPrediction(isSpam ? "Spam 🚫" : "Not Spam ✅");
+  const movies = {
+    action: [
+      { title: "Mad Max: Fury Road", year: 2015, poster: "https://image.tmdb.org/t/p/w500/8tZYtuWezp8JbcsvHYO0O46tFbo.jpg" },
+      { title: "John Wick", year: 2014, poster: "https://image.tmdb.org/t/p/w500/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg" },
+      { title: "Gladiator", year: 2000, poster: "https://image.tmdb.org/t/p/w500/ty8TGRuvJLPUmAR1H1nRIsgwvim.jpg" },
+      { title: "The Dark Knight", year: 2008, poster: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg" }
+    ],
+    comedy: [
+      { title: "Superbad", year: 2007, poster: "https://image.tmdb.org/t/p/w500/ek8e8txUyUwd2BNqj6lFEerJfbq.jpg" },
+      { title: "The Hangover", year: 2009, poster: "https://image.tmdb.org/t/p/w500/uluhlXubGu1VxU63X9VHCLWDAYP.jpg" },
+      { title: "Anchorman", year: 2004, poster: "https://image.tmdb.org/t/p/w500/AyXExKqHhKM2xGn7c6A2hUQv8E9.jpg" }
+    ],
+    horror: [
+      { title: "The Conjuring", year: 2013, poster: "https://image.tmdb.org/t/p/w500/l5qZbDObubXU5SEhNqV5TeHcnQ5.jpg" },
+      { title: "Get Out", year: 2017, poster: "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg" },
+      { title: "A Quiet Place", year: 2018, poster: "https://image.tmdb.org/t/p/w500/nAU74GmpUk7t5iklEp3bufwDq4n.jpg" }
+    ],
+    drama: [
+      { title: "The Godfather", year: 1972, poster: "https://image.tmdb.org/t/p/w500/eEslKSwcqmiNS6va24Pbxf2UKmJ.jpg" },
+      { title: "Parasite", year: 2019, poster: "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg" },
+      { title: "The Shawshank Redemption", year: 1994, poster: "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg" }
+    ],
+    romance: [
+      { title: "The Notebook", year: 2004, poster: "https://image.tmdb.org/t/p/w500/qmDpIHrmpJINaRKAfWQfftjCdyi.jpg" },
+      { title: "La La Land", year: 2016, poster: "https://image.tmdb.org/t/p/w500/uDO8zWDhfWwoFdKS4fzkUJt0Rf0.jpg" },
+      { title: "Titanic", year: 1997, poster: "https://image.tmdb.org/t/p/w500/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg" }
+    ],
+    scifi: [
+      { title: "Interstellar", year: 2014, poster: "https://image.tmdb.org/t/p/w500/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg" },
+      { title: "The Matrix", year: 1999, poster: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg" },
+      { title: "Arrival", year: 2016, poster: "https://image.tmdb.org/t/p/w500/tFMo3UJ4B4qIuOts3SSQx7fTj2c.jpg" }
+    ],
+    anime: [
+      { title: "Spirited Away", year: 2001, poster: "https://image.tmdb.org/t/p/w500/dL11DBPcRhWWnJcFXl9A07MrqTI.jpg" },
+      { title: "Your Name", year: 2016, poster: "https://image.tmdb.org/t/p/w500/xq1Ugd62d23K2knRUx6xxuALTZB.jpg" },
+      { title: "Akira", year: 1988, poster: "https://image.tmdb.org/t/p/w500/4cbP3kJ4xvx3iQZtfhkh2Y1ZpD.jpg" }
+    ]
   };
 
-  const skills = [
-    { name: "Python", level: 90 },
-    { name: "Java", level: 75 },
-    { name: "Scheme", level: 65 },
-    { name: "HTML / CSS / JavaScript", level: 85 },
-    { name: "Machine Learning", level: 80 },
-    { name: "Graph Algorithms", level: 78 },
-    { name: "MySQL / SQLite", level: 75 },
-    { name: "Git & GitHub", level: 88 },
-  ];
+  const predictRecommendation = () => {
+    const key = genreInput.toLowerCase().replace(/\s/g, "");
+    if (!movies[key]) {
+      setRecommendation([
+        { title: "Genre not recognized. Try: action, comedy, horror, drama, romance, scifi, anime.", year: "", poster: "https://via.placeholder.com/400x300?text=No+Movies" }
+      ]);
+      return;
+    }
+    const top3 = [...movies[key]].sort(() => 0.5 - Math.random()).slice(0, 3);
+    setRecommendation(top3);
+  };
+
+  const skills = {
+    "Programming Languages": ["Python", "Java", "JavaScript", "R"],
+    "Web Development": ["React", "HTML", "CSS"],
+    "Data & AI": ["NumPy", "Pandas", "Scikit-learn", "TensorFlow", "PyTorch"],
+    "Core Computer Science": ["Algorithms", "Data Structures", "Data Analysis"]
+  };
 
   const projects = [
     {
-      title: "Healthcare Cybersecurity Attack Model",
-      description:
-        "Designed attack graphs analysing vulnerabilities in smart healthcare devices and proposed defence strategies.",
-      tech: "Python • Network Security",
-      github: "#",
-      live: null,
+      icon: "🎬",
+      title: "CineBloom – Movie Discovery App",
+      description: "Responsive movie discovery app with interactive genre selection and top picks recommendations.",
+      tech: "React • JavaScript • HTML • CSS • Framer Motion",
+      outcome: "Built a top-3 movie recommender in JS, deployed full-stack, and received 90% positive user feedback.",
+      live: "https://ashmmitha.github.io/CineBloom/",
+      github: "https://github.com/Ashmmitha/CineBloom"
     },
     {
-      title: "Spam Detection ML",
-      description:
-        "Built ML models for spam detection with feature engineering and evaluation metrics.",
-      tech: "Python • Scikit-Learn",
-      github: "#",
-      live: null,
+      icon: "🐜",
+      title: "Swarm Intelligence Pathfinding",
+      description: "Implemented ACO and PSO to solve graph routing problems.",
+      tech: "Python • Optimization Algorithms",
+      outcome: "Compared convergence speed and path cost vs Dijkstra, reduced average path cost by 18%."
     },
     {
-      title: "Full Stack Web App",
-      description:
-        "Responsive web app with authentication and database integration.",
-      tech: "React • Node • MongoDB",
-      github: "#",
-      live: "#",
+      icon: "📚",
+      title: "StarReader – UX Prototype",
+      description: "Gamified reading app for children to improve vocabulary with interactive rewards.",
+      tech: "Axure RP • UX Design",
+      outcome: "Applied HCI principles such as feedback, visibility, and consistency."
     },
+    {
+      icon: "📊",
+      title: "Statistical Data Analysis with R",
+      description: "Analysed datasets with R to compute descriptive stats, generate plots, and visualize grouped data.",
+      tech: "R • ggplot2 • Data Analysis",
+      outcome: "Explored statistical distributions and data visualization techniques using facet plots."
+    }
   ];
 
   return (
-    <div className="relative min-h-screen bg-[#0f172a] text-white overflow-x-hidden">
-
-      {/* 🌌 Particles */}
-      <Particles
-        id="tsparticles"
-        init={particlesInit}
-        options={{
-          background: { color: { value: "transparent" } },
-          particles: {
-            number: { value: 40 },
-            color: { value: "#c084fc" },
-            opacity: { value: 0.3 },
-            size: { value: 3 },
-            move: { enable: true, speed: 0.6 },
-          },
-        }}
-        className="absolute inset-0 -z-10"
-      />
+    <div className="min-h-screen bg-[#0b0e1a] text-gray-100">
 
       {/* HERO */}
-      <section className="flex flex-col items-center justify-center text-center py-2 px-6">
-        <p className="text-purple-300 text-3xl mb-4 cursive-font tracking-wide">
-          <Typewriter
-            words={["Hi !! 👋", "Welcome to my portfolio ✨"]}
-            loop={0}
-            cursor
-            cursorStyle="_"
-            typeSpeed={70}
-            deleteSpeed={50}
-            delaySpeed={1500}
-          />
+      <section className="flex flex-col items-center text-center py-20 px-6">
+        <p className="text-3xl font-semibold mb-4">
+          <Typewriter words={["Computer Science Student exploring AI, Data & Algorithms"]} loop={0} cursor />
         </p>
-
-        <motion.div
-          animate={{ y: [0, -15, 0] }}
+        <p className="text-gray-400 max-w-xl mb-6">
+          Built a top-3 movie recommender in JS and implemented ACO/PSO experiments to optimize routing paths.
+          Passionate about AI, data analysis, and building interactive web applications.
+        </p>
+        <motion.img
+          src={avatar}
+          alt="profile"
+          className="w-40 h-40 rounded-full border-2 border-gray-400 mb-6"
+          animate={{ y: [0, -5, 0] }}
           transition={{ repeat: Infinity, duration: 4 }}
-          className="relative mb-8"
-        >
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 blur-xl opacity-70 animate-pulse"></div>
-          <img
-            src={avatar}
-            alt="Ashmi Avatar"
-            className="relative w-44 h-44 rounded-full object-cover border-4 border-purple-400 shadow-2xl"
-          />
-        </motion.div>
-
-        <h1 className="text-5xl md:text-6xl font-extrabold">Ashmi</h1>
-        <p className="text-purple-300 mt-4 text-lg">
-          Computer Science Student • AI Enthusiast • Full Stack Developer
-        </p>
-
-        <div className="flex gap-6 mt-6 text-2xl text-white/70">
-          <a href="https://github.com/Ashmmitha" target="_blank" rel="noopener noreferrer">
-            <FaGithub className="hover:text-purple-400 hover:scale-125 transition duration-300 cursor-pointer" />
-          </a>
-          <a href="https://linkedin.com/in/ashmitha-aloshious-937688332" target="_blank" rel="noopener noreferrer">
-            <FaLinkedin className="hover:text-purple-400 hover:scale-125 transition duration-300 cursor-pointer" />
-          </a>
+        />
+        <div className="flex gap-8 text-gray-400">
+          <div><span className="text-white font-bold">AI</span><p>Algorithms</p></div>
+          <div><span className="text-white font-bold">UX</span><p>Design</p></div>
+          <div><span className="text-white font-bold">Data</span><p>Analysis</p></div>
         </div>
-      </section>
+        <div className="flex gap-4 mt-4 flex-wrap justify-center">
+          <a href="https://github.com/Ashmmitha" target="_blank" rel="noopener noreferrer" className="bg-gray-800 px-4 py-2 rounded-lg hover:bg-gray-700 transition">View My GitHub</a>
+          <a href="MY CV.pdf" download className="bg-cyan-600 px-4 py-2 rounded-lg hover:bg-cyan-500 transition">Download CV</a>
+            <a href="https://www.linkedin.com/in/ashmitha-aloshious-937688332/" target="_blank" rel="noopener noreferrer" className="bg-blue-700 px-4 py-2 rounded-lg hover:bg-blue-600 transition flex items-center gap-2">
+    <FaLinkedin /> LinkedIn
+  </a>
 
-      {/* RELEVANT MODULES */}
-      <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold text-purple-300 mb-8 text-center">
-          Relevant Modules
-        </h2>
-        <div className="grid md:grid-cols-2 gap-6">
-          {[
-            "Data Structures & Algorithms",
-            "Artificial Intelligence",
-            "Machine Learning",
-            "Natural Computing",
-            "Information Security",
-            "Full-Stack Web Development",
-            "Software Engineering",
-          ].map((module, i) => (
-            <div key={i} className="bg-white/10 p-5 rounded-xl border border-white/20">
-              {module}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* TECHNICAL SKILLS */}
-      <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold text-purple-300 mb-10 text-center">
-          Technical Skills
-        </h2>
-        <div className="space-y-6">
-          {skills.map((skill, i) => (
-            <div key={i}>
-              <div className="flex justify-between mb-1">
-                <span>{skill.name}</span>
-                <span>{skill.level}%</span>
-              </div>
-              <div className="w-full bg-white/10 rounded-full h-3">
-                <motion.div
-                  initial={{ width: 0 }}
-                  whileInView={{ width: `${skill.level}%` }}
-                  transition={{ duration: 1 }}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full"
-                />
-              </div>
-            </div>
-          ))}
+          <a href="Certificate.pdf" download className="bg-green-600 px-4 py-2 rounded-lg hover:bg-green-500 transition">Download Certificate</a>
         </div>
       </section>
 
       {/* PROJECTS */}
       <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold text-purple-300 mb-10 text-center">
-          Selected Projects
-        </h2>
+        <h2 className="text-3xl font-bold mb-10 text-center">Featured Work</h2>
         <div className="grid md:grid-cols-2 gap-8">
           {projects.map((p, i) => (
-            <motion.div
-              key={i}
-              whileHover={{ scale: 1.03 }}
-              className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 shadow-lg"
-            >
-              <h3 className="text-xl font-bold mb-2">{p.title}</h3>
-              <p className="text-white/70 text-sm mb-4">{p.description}</p>
-              <p className="text-xs text-purple-400 uppercase mb-4">{p.tech}</p>
-              <div className="flex gap-4 text-sm">
-                <a href={p.github} target="_blank" rel="noreferrer">
-                  <FaGithub /> Code
-                </a>
-                {p.live && (
-                  <a href={p.live} target="_blank" rel="noreferrer">
-                    <FaExternalLinkAlt /> Demo
-                  </a>
-                )}
+            <motion.div key={i} whileHover={{ scale: 1.05 }} className="bg-gray-900/40 p-6 rounded-xl border border-gray-700 hover:border-cyan-400 transition">
+              <h3 className="text-xl font-bold mb-2">{p.icon} {p.title}</h3>
+              <p className="text-gray-300 text-sm mb-2">{p.description}</p>
+              <p className="text-cyan-400 text-xs mb-2">{p.tech}</p>
+              <p className="text-gray-300 mb-3">{p.outcome}</p>
+              <div className="flex gap-4 text-sm flex-wrap">
+                {p.live && <a href={p.live} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">Live Demo</a>}
+                {p.github && <a href={p.github} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:underline">GitHub</a>}
               </div>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* INTERACTIVE SPAM DETECTION DEMO */}
-      <section className="max-w-3xl mx-auto mt-12">
-        <h2 className="text-2xl font-bold text-purple-300 mb-6 text-center">
-          Try it Yourself
-        </h2>
-        <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg glow-animated">
-          <h3 className="font-bold text-xl mb-4">Spam Detection Demo</h3>
-          <input
-            type="text"
-            placeholder="Type an email..."
-            className="p-2 rounded w-full mb-4 text-gray-900"
-            value={emailText}
-            onChange={(e) => setEmailText(e.target.value)}
-          />
-          <button
-            onClick={predictEmail}
-            className="px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded text-white"
-          >
-            Predict
-          </button>
-          <p className="mt-2 text-white/70">Prediction: {prediction}</p>
+      {/* SKILLS */}
+      <section className="max-w-5xl mx-auto px-6 py-16">
+        <h2 className="text-3xl font-bold mb-10 text-center">Technical Skills</h2>
+        <div className="text-center text-gray-300 space-y-4">
+          {Object.entries(skills).map(([category, list]) => (
+            <p key={category}><span className="text-white font-semibold">{category}:</span> {list.join(" • ")}</p>
+          ))}
         </div>
       </section>
 
-      {/* RESUME & CERTIFICATES */}
-      <section className="max-w-3xl mx-auto px-6 py-20">
-        <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-center gap-6">
-          <a
-            href="/MY CV.pdf"
-            download
-            className="flex items-center gap-3 bg-purple-500 hover:bg-purple-600 transition px-6 py-4 rounded-2xl font-semibold shadow-lg hover:shadow-purple-400/80 glow"
-          >
-            <FaExternalLinkAlt /> Download Resume
-          </a>
-          <a
-            href="/Certificate.pdf"
-            download
-            className="flex items-center gap-1 bg-pink-500 hover:bg-pink-600 transition px-6 py-4 rounded-2xl font-semibold shadow-lg hover:shadow-pink-400/80 glow"
-          >
-            <FaExternalLinkAlt /> Download Certificate
-          </a>
+      {/* MOVIE DEMO */}
+      <section className="max-w-5xl mx-auto px-6 py-16">
+        <h2 className="text-2xl font-bold mb-4 text-center">Movie Recommendation Demo 🍿</h2>
+        <p className="text-gray-400 text-sm mb-6 text-center">Type a genre to get 3 curated suggestions with posters.</p>
+        <div className="flex flex-col items-center gap-4 mb-6">
+          <input type="text" placeholder="Enter genre..." className="p-2 rounded w-64 text-gray-900" value={genreInput} onChange={(e) => setGenreInput(e.target.value)} />
+          <button onClick={predictRecommendation} className="px-4 py-2 bg-cyan-600 rounded hover:bg-cyan-500 transition">Recommend</button>
         </div>
+        {recommendation.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {recommendation.map((movie, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                whileHover={{ scale: 1.05 }}
+                className="bg-gray-900/40 rounded-lg overflow-hidden border border-gray-700"
+              >
+                <img src={movie.poster} alt={movie.title} className="w-full h-72 object-cover" />
+                <div className="p-2 text-center">
+                  <h3 className="text-white font-semibold">{movie.title}</h3>
+                  <p className="text-gray-400 text-sm">{movie.year}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* CONTACT */}
-      <section className="max-w-3xl mx-auto px-6 py-5">
-        <div className="bg-black/60 p-8 rounded-2xl font-mono text-green-400 shadow-xl">
-          <p>&gt; Let's build something together.</p>
-          <p>&gt; contact: ashmithaalsohias@gmail.com</p>
-          <p>&gt; status: Available for opportunities</p>
+      <section className="max-w-3xl mx-auto px-6 py-16">
+        <div className="bg-gray-900/40 p-8 rounded-2xl shadow-md text-center border border-gray-700">
+          <h2 className="text-2xl font-bold text-white mb-4">Let’s Collaborate!</h2>
+          <p className="text-gray-300">Reach me at <a href="mailto:ashmithaaloshious@gmail.com" className="text-cyan-400 hover:underline">ashmithaaloshious@gmail.com</a></p>
+          <p className="text-gray-400 mt-2">Open to opportunities, internships, and learning projects.</p>
         </div>
       </section>
     </div>
